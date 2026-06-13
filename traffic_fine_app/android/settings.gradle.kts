@@ -23,4 +23,14 @@ plugins {
     id("org.jetbrains.kotlin.android") version "2.2.20" apply false
 }
 
+// මෙන්න මේ අලුත් කොටස තමයි අපි PayHere එක වෙනුවෙන් එකතු කරේ
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        google()
+        mavenCentral()
+        maven { url = uri("https://jitpack.io") }
+    }
+}
+
 include(":app")
