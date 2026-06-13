@@ -12,25 +12,125 @@ function FineForm({ onFineCreated }) {
     vehicleNumber: "",
   });
 
+  const [fieldErrors, setFieldErrors] = useState({});
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const validationRules = {
+    referenceNumber: {
+      pattern: /^REF\d{5}$/,
+      message: "Use REF followed by 5 digits. Example: REF12345",
+    },
+    categoryCode: {
+      pattern: /^C\d{3}$/,
+      message: "Use C followed by 3 digits. Example: C001",
+    },
+    officerBadgeNumber: {
+      pattern: /^B\d{3}$/,
+      message: "Use B followed by 3 digits. Example: B123",
+    },
+    driverName: {
+      pattern: /^[A-Za-z]+(?: [A-Za-z]+)*$/,
+      message: "Enter a valid name using letters and spaces only.",
+    },
+    driverLicenseNumber: {
+      pattern: /^[A-Z]\d{7}$/,
+      message:
+        "Use one uppercase letter followed by 7 digits. Example: B1234567",
+    },
+    vehicleNumber: {
+      pattern: /^[A-Z]{2,3}-\d{4}$/,
+      message:
+        "Use 2 or 3 uppercase letters, a hyphen and 4 digits. Example: CAA-1234",
+    },
+  };
+
+  function normalizeValue(name, value) {
+    if (name === "driverName") {
+      return value.replace(/[^A-Za-z ]/g, "").replace(/\s+/g, " ");
+    }
+
+    return value.toUpperCase().replace(/\s/g, "");
+  }
+
+  function validateField(name, value) {
+    if (!value.trim()) {
+      return "This field is required.";
+    }
+
+    const rule = validationRules[name];
+
+    if (!rule.pattern.test(value.trim())) {
+      return rule.message;
+    }
+
+    return "";
+  }
+
   function handleChange(event) {
     const { name, value } = event.target;
+    const normalizedValue = normalizeValue(name, value);
 
     setFormData((previousData) => ({
       ...previousData,
-      [name]: value,
+      [name]: normalizedValue,
+    }));
+
+    setFieldErrors((previousErrors) => ({
+      ...previousErrors,
+      [name]: validateField(name, normalizedValue),
+    }));
+
+    setError("");
+  }
+
+  function handleBlur(event) {
+    const { name, value } = event.target;
+
+    setFieldErrors((previousErrors) => ({
+      ...previousErrors,
+      [name]: validateField(name, value),
     }));
   }
+
+  function validateForm() {
+    const newErrors = {};
+
+    Object.entries(formData).forEach(([name, value]) => {
+      const validationError = validateField(name, value);
+
+      if (validationError) {
+        newErrors[name] = validationError;
+      }
+    });
+
+    setFieldErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  }
+
+  const formIsValid = Object.entries(formData).every(([name, value]) => {
+    const rule = validationRules[name];
+
+    return value.trim() !== "" && rule.pattern.test(value.trim());
+  });
 
   async function handleSubmit(event) {
     event.preventDefault();
     setError("");
+
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const response = await apiClient.post("/fines/create", formData);
+      const response = await apiClient.post("/fines/create", {
+        ...formData,
+        driverName: formData.driverName.trim(),
+      });
+
       onFineCreated(response.data);
     } catch (requestError) {
       setError(
@@ -61,7 +161,6 @@ function FineForm({ onFineCreated }) {
       borderRadius: "24px",
       padding: "38px",
       boxShadow: "0 24px 70px rgba(0, 0, 0, 0.28)",
-      border: "1px solid rgba(255, 255, 255, 0.35)",
     },
 
     topBadge: {
@@ -74,8 +173,6 @@ function FineForm({ onFineCreated }) {
       color: "#08796d",
       fontSize: "12px",
       fontWeight: "700",
-      letterSpacing: "0.8px",
-      textTransform: "uppercase",
       marginBottom: "18px",
     },
 
@@ -84,7 +181,6 @@ function FineForm({ onFineCreated }) {
       color: "#102a43",
       fontSize: "32px",
       fontWeight: "800",
-      letterSpacing: "-0.5px",
     },
 
     subtitle: {
@@ -135,19 +231,23 @@ function FineForm({ onFineCreated }) {
       width: "100%",
       padding: "13px 14px",
       borderRadius: "12px",
-      border: "1px solid #d9e2ec",
       backgroundColor: "#f8fbfd",
       color: "#102a43",
       fontSize: "14px",
       outline: "none",
       boxSizing: "border-box",
-      transition: "all 0.2s ease",
     },
 
     helperText: {
       color: "#829ab1",
       fontSize: "11px",
-      marginTop: "1px",
+    },
+
+    fieldError: {
+      color: "#c62828",
+      fontSize: "11px",
+      fontWeight: "600",
+      lineHeight: "1.4",
     },
 
     divider: {
@@ -200,15 +300,16 @@ function FineForm({ onFineCreated }) {
       padding: "15px 18px",
       border: "none",
       borderRadius: "14px",
-      background: loading
-        ? "#8bbcb5"
-        : "linear-gradient(90deg, #087f8c 0%, #16b89d 100%)",
+      background:
+        loading || !formIsValid
+          ? "#9ebbb7"
+          : "linear-gradient(90deg, #087f8c 0%, #16b89d 100%)",
       color: "white",
       fontSize: "14px",
       fontWeight: "800",
       letterSpacing: "0.8px",
-      cursor: loading ? "not-allowed" : "pointer",
-      boxShadow: "0 12px 24px rgba(22, 184, 157, 0.24)",
+      cursor:
+        loading || !formIsValid ? "not-allowed" : "pointer",
     },
 
     footer: {
@@ -216,9 +317,27 @@ function FineForm({ onFineCreated }) {
       marginTop: "18px",
       color: "#829ab1",
       fontSize: "11px",
-      lineHeight: "1.6",
     },
   };
+
+  function getInputStyle(fieldName) {
+    return {
+      ...styles.input,
+      border: fieldErrors[fieldName]
+        ? "1px solid #dc3545"
+        : "1px solid #d9e2ec",
+    };
+  }
+
+  function renderError(fieldName) {
+    return (
+      fieldErrors[fieldName] && (
+        <span style={styles.fieldError}>
+          {fieldErrors[fieldName]}
+        </span>
+      )
+    );
+  }
 
   return (
     <div style={styles.page}>
@@ -231,11 +350,10 @@ function FineForm({ onFineCreated }) {
         <h1 style={styles.heading}>Pay Your Traffic Fine</h1>
 
         <p style={styles.subtitle}>
-          Enter the information shown on your traffic fine sheet. Your fine
-          details will be verified before the payment is initiated.
+          Enter the information shown on your traffic fine sheet.
         </p>
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <h2 style={styles.sectionTitle}>Fine information</h2>
 
           <div style={styles.grid}>
@@ -247,17 +365,20 @@ function FineForm({ onFineCreated }) {
 
               <input
                 id="referenceNumber"
-                type="text"
                 name="referenceNumber"
-                placeholder="REF12346"
+                type="text"
+                placeholder="REF12345"
+                maxLength={8}
                 value={formData.referenceNumber}
                 onChange={handleChange}
-                style={styles.input}
-                required
+                onBlur={handleBlur}
+                style={getInputStyle("referenceNumber")}
               />
 
+              {renderError("referenceNumber")}
+
               <span style={styles.helperText}>
-                Enter the unique reference printed on the fine sheet.
+                Format: REF followed by 5 digits.
               </span>
             </div>
 
@@ -269,17 +390,20 @@ function FineForm({ onFineCreated }) {
 
               <input
                 id="categoryCode"
-                type="text"
                 name="categoryCode"
+                type="text"
                 placeholder="C001"
+                maxLength={4}
                 value={formData.categoryCode}
                 onChange={handleChange}
-                style={styles.input}
-                required
+                onBlur={handleBlur}
+                style={getInputStyle("categoryCode")}
               />
 
+              {renderError("categoryCode")}
+
               <span style={styles.helperText}>
-                Use the category identifier shown on the fine.
+                Format: C followed by 3 digits.
               </span>
             </div>
 
@@ -291,14 +415,17 @@ function FineForm({ onFineCreated }) {
 
               <input
                 id="officerBadgeNumber"
-                type="text"
                 name="officerBadgeNumber"
-                placeholder="Enter officer badge number"
+                type="text"
+                placeholder="OFF1234"
+                maxLength={7}
                 value={formData.officerBadgeNumber}
                 onChange={handleChange}
-                style={styles.input}
-                required
+                onBlur={handleBlur}
+                style={getInputStyle("officerBadgeNumber")}
               />
+
+              {renderError("officerBadgeNumber")}
             </div>
           </div>
 
@@ -315,14 +442,17 @@ function FineForm({ onFineCreated }) {
 
               <input
                 id="driverName"
-                type="text"
                 name="driverName"
-                placeholder="Enter driver full name"
+                type="text"
+                placeholder="Kamal Perera"
+                maxLength={60}
                 value={formData.driverName}
                 onChange={handleChange}
-                style={styles.input}
-                required
+                onBlur={handleBlur}
+                style={getInputStyle("driverName")}
               />
+
+              {renderError("driverName")}
             </div>
 
             <div style={styles.field}>
@@ -333,14 +463,17 @@ function FineForm({ onFineCreated }) {
 
               <input
                 id="driverLicenseNumber"
-                type="text"
                 name="driverLicenseNumber"
+                type="text"
                 placeholder="B1234567"
+                maxLength={8}
                 value={formData.driverLicenseNumber}
                 onChange={handleChange}
-                style={styles.input}
-                required
+                onBlur={handleBlur}
+                style={getInputStyle("driverLicenseNumber")}
               />
+
+              {renderError("driverLicenseNumber")}
             </div>
 
             <div style={styles.field}>
@@ -351,14 +484,17 @@ function FineForm({ onFineCreated }) {
 
               <input
                 id="vehicleNumber"
-                type="text"
                 name="vehicleNumber"
+                type="text"
                 placeholder="CAA-1234"
+                maxLength={8}
                 value={formData.vehicleNumber}
                 onChange={handleChange}
-                style={styles.input}
-                required
+                onBlur={handleBlur}
+                style={getInputStyle("vehicleNumber")}
               />
+
+              {renderError("vehicleNumber")}
             </div>
           </div>
 
@@ -366,21 +502,23 @@ function FineForm({ onFineCreated }) {
             <div style={styles.noticeIcon}>i</div>
 
             <div>
-              Make sure the entered information matches the printed fine sheet.
-              Incorrect details may prevent the payment from being processed.
+              Make sure all details match the printed fine sheet.
             </div>
           </div>
 
           {error && <div style={styles.error}>{error}</div>}
 
-          <button type="submit" style={styles.button} disabled={loading}>
+          <button
+            type="submit"
+            style={styles.button}
+            disabled={loading || !formIsValid}
+          >
             {loading ? "VERIFYING FINE..." : "VERIFY AND CONTINUE"}
           </button>
         </form>
 
         <p style={styles.footer}>
-          Your information is used only to verify and process the traffic fine
-          payment.
+          Your information is used only to verify and process the payment.
         </p>
       </div>
     </div>
