@@ -2,11 +2,15 @@ package com.ruhuna.traffic_fine_backend.service;
 
 import com.ruhuna.traffic_fine_backend.Entity.Fine;
 import com.ruhuna.traffic_fine_backend.Entity.Payment;
+import com.ruhuna.traffic_fine_backend.Entity.PoliceOfficer;
 import com.ruhuna.traffic_fine_backend.dto.PayFineRequest;
 import com.ruhuna.traffic_fine_backend.dto.PayFineResponse;
 import com.ruhuna.traffic_fine_backend.dto.PaymentInitiateResponse;
 import com.ruhuna.traffic_fine_backend.repository.FineRepository;
 import com.ruhuna.traffic_fine_backend.repository.PaymentRepository;
+import com.ruhuna.traffic_fine_backend.sms.SmsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -17,16 +21,21 @@ import java.util.UUID;
 @Service
 public class PaymentService {
 
+    private static final Logger log = LoggerFactory.getLogger(PaymentService.class);
+
     private final FineRepository fineRepository;
     private final PaymentRepository paymentRepository;
     private final PayHerePaymentGatewayService payHerePaymentGatewayService;
+    private final SmsService smsService;
 
     public PaymentService(FineRepository fineRepository,
                           PaymentRepository paymentRepository,
-                          PayHerePaymentGatewayService payHerePaymentGatewayService) {
+                          PayHerePaymentGatewayService payHerePaymentGatewayService,
+                          SmsService smsService) {
         this.fineRepository = fineRepository;
         this.paymentRepository = paymentRepository;
         this.payHerePaymentGatewayService = payHerePaymentGatewayService;
+        this.smsService = smsService;
     }
 
     public PaymentInitiateResponse initiatePayment(PayFineRequest request) {
@@ -106,6 +115,10 @@ public class PaymentService {
 
             fine.setStatus("PAID");
             fineRepository.save(fine);
+
+            // Notify the issuing officer so the driver can retrieve the license.
+            // Isolated so an SMS failure never affects the payment outcome.
+            notifyOfficerOfPayment(fine);
         } else if ("0".equals(statusCode)) {
             payment.setPaymentStatus("PENDING");
         } else {
@@ -117,5 +130,36 @@ public class PaymentService {
 
     private String generatePaymentReference() {
         return "PAY-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    /**
+     * Sends a payment-confirmation SMS to the officer who issued the fine.
+     * Any failure here is swallowed and logged: the payment has already been
+     * recorded successfully and must not be rolled back because of SMS issues.
+     */
+    private void notifyOfficerOfPayment(Fine fine) {
+        try {
+            PoliceOfficer officer = fine.getPoliceOfficer();
+            if (officer == null || officer.getPhoneNumber() == null
+                    || officer.getPhoneNumber().isBlank()) {
+                log.warn("Fine {} paid, but no officer phone number available for SMS.",
+                        fine.getReferenceNumber());
+                return;
+            }
+
+            String message = "Traffic Fine PAID. Ref: " + fine.getReferenceNumber()
+                    + ", Vehicle: " + fine.getVehicleNumber()
+                    + ", Amount: LKR " + fine.getAmount()
+                    + ". The driver may now retrieve the license.";
+
+            boolean sent = smsService.sendSms(officer.getPhoneNumber(), message);
+            if (!sent) {
+                log.warn("Payment SMS for fine {} was not delivered to officer {}.",
+                        fine.getReferenceNumber(), officer.getBadgeNumber());
+            }
+        } catch (Exception e) {
+            log.error("Unexpected error while sending payment SMS for fine {}: {}",
+                    fine.getReferenceNumber(), e.getMessage());
+        }
     }
 }
