@@ -11,13 +11,15 @@ public class Payment {
     private Long id;
 
     private String paymentReference;
-
     private String paymentMethod;
-
     private Double amount;
-
     private String paymentStatus;
 
+    private String gatewayTransactionId;
+    private String paymentGatewayName;
+    private String gatewayPaymentUrl;
+
+    private LocalDateTime initiatedDateTime;
     private LocalDateTime paidDateTime;
 
     @OneToOne
@@ -25,16 +27,6 @@ public class Payment {
     private Fine fine;
 
     public Payment() {
-    }
-
-    public Payment(String paymentReference, String paymentMethod, Double amount,
-                   String paymentStatus, LocalDateTime paidDateTime, Fine fine) {
-        this.paymentReference = paymentReference;
-        this.paymentMethod = paymentMethod;
-        this.amount = amount;
-        this.paymentStatus = paymentStatus;
-        this.paidDateTime = paidDateTime;
-        this.fine = fine;
     }
 
     public Long getId() {
@@ -71,6 +63,38 @@ public class Payment {
 
     public void setPaymentStatus(String paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public String getGatewayTransactionId() {
+        return gatewayTransactionId;
+    }
+
+    public void setGatewayTransactionId(String gatewayTransactionId) {
+        this.gatewayTransactionId = gatewayTransactionId;
+    }
+
+    public String getPaymentGatewayName() {
+        return paymentGatewayName;
+    }
+
+    public void setPaymentGatewayName(String paymentGatewayName) {
+        this.paymentGatewayName = paymentGatewayName;
+    }
+
+    public String getGatewayPaymentUrl() {
+        return gatewayPaymentUrl;
+    }
+
+    public void setGatewayPaymentUrl(String gatewayPaymentUrl) {
+        this.gatewayPaymentUrl = gatewayPaymentUrl;
+    }
+
+    public LocalDateTime getInitiatedDateTime() {
+        return initiatedDateTime;
+    }
+
+    public void setInitiatedDateTime(LocalDateTime initiatedDateTime) {
+        this.initiatedDateTime = initiatedDateTime;
     }
 
     public LocalDateTime getPaidDateTime() {
