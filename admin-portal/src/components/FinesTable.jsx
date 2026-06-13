@@ -1,4 +1,12 @@
-const money = (n) => 'Rs ' + n.toLocaleString()
+const money = (n) => 'Rs ' + Number(n || 0).toLocaleString()
+
+// Map backend status values to a badge style.
+function badgeClass(status) {
+  const s = (status || '').toUpperCase()
+  if (s === 'PAID') return 'paid'
+  if (s === 'PENDING') return 'pending'
+  return 'unpaid'
+}
 
 export default function FinesTable({ rows }) {
   return (
@@ -17,21 +25,17 @@ export default function FinesTable({ rows }) {
         <tbody>
           {rows.map((f) => (
             <tr key={f.ref}>
-              <td style={{ fontVariantNumeric: 'tabular-nums' }}>{f.ref}</td>
+              <td style={{ fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{f.ref}</td>
               <td>{f.category}</td>
               <td>{f.district}</td>
               <td>{money(f.amount)}</td>
-              <td>
-                <span className={`badge ${f.status === 'PAID' ? 'paid' : 'unpaid'}`}>
-                  {f.status}
-                </span>
-              </td>
+              <td><span className={`badge ${badgeClass(f.status)}`}>{f.status}</span></td>
               <td>{f.date}</td>
             </tr>
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={6} style={{ textAlign: 'center', color: '#667085', padding: 28 }}>
+              <td colSpan={6} style={{ textAlign: 'center', color: 'var(--muted)', padding: 28 }}>
                 No fines match these filters.
               </td>
             </tr>
