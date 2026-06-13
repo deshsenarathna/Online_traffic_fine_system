@@ -1,3 +1,4 @@
+import { NavLink } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import Seal from './Seal'
 
@@ -15,8 +16,13 @@ export default function Sidebar() {
 
       <nav className="side-nav">
         <div className="nav-label">Monitoring</div>
-        <div className="nav-item active"><span>Dashboard</span></div>
-        {/* Future sections can be added here, e.g. Reports, Districts */}
+        <NavLink to="/" end className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+          <span>Dashboard</span>
+        </NavLink>
+        <div className="nav-label" style={{ marginTop: 16 }}>Administration</div>
+        <NavLink to="/officers" className={({ isActive }) => 'nav-item' + (isActive ? ' active' : '')}>
+          <span>Officers</span>
+        </NavLink>
       </nav>
 
       <div className="side-foot">

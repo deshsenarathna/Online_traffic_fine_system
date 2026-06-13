@@ -264,3 +264,31 @@ tbody tr:hover { background: #f7f9fc; }
   .sidebar .side-head .wm, .nav-item span, .nav-label, .sidebar .who .l1, .sidebar .who .l2, .sidebar .logout span { display: none; }
   .topbar .row, .content { padding-left: 18px; padding-right: 18px; }
 }
+.officer-form {
+  display: grid; grid-template-columns: repeat(2, 1fr);
+  gap: 14px 18px; margin: 6px 0 4px;
+}
+.officer-form .field { margin: 0; }
+.officer-form select {
+  width: 100%; padding: 12px 14px; border: 1px solid var(--line);
+  border-radius: 10px; font-size: 15px; background: #fbfcfe; outline: none;
+}
+.officer-form select:focus { border-color: var(--navy-600); }
+
+.btn-ghost {
+  background: transparent; border: 1px solid var(--line); color: var(--muted);
+  padding: 11px 20px; border-radius: 10px; font-size: 14px; font-weight: 500;
+}
+.btn-ghost:hover { border-color: var(--navy-600); color: var(--text); }
+
+.link-btn {
+  background: none; border: none; color: var(--navy-600); font-weight: 600;
+  font-size: 13px; padding: 4px 8px; border-radius: 6px;
+}
+.link-btn:hover { background: #eef2f8; }
+.link-btn.danger { color: var(--red); }
+.link-btn.danger:hover { background: var(--red-bg); }
+
+@media (max-width: 720px) {
+  .officer-form { grid-template-columns: 1fr; }
+}
