@@ -5,6 +5,8 @@ import com.ruhuna.traffic_fine_backend.Entity.FineCategory;
 import com.ruhuna.traffic_fine_backend.Entity.PoliceOfficer;
 import com.ruhuna.traffic_fine_backend.dto.CreateFineRequest;
 import com.ruhuna.traffic_fine_backend.dto.CreateFineResponse;
+import com.ruhuna.traffic_fine_backend.exception.BadRequestException;
+import com.ruhuna.traffic_fine_backend.exception.ConflictException;
 import com.ruhuna.traffic_fine_backend.repository.FineCategoryRepository;
 import com.ruhuna.traffic_fine_backend.repository.FineRepository;
 import com.ruhuna.traffic_fine_backend.repository.PoliceOfficerRepository;
@@ -30,16 +32,16 @@ public class FineService {
     public CreateFineResponse createFine(CreateFineRequest request) {
 
         if (fineRepository.existsByReferenceNumber(request.getReferenceNumber())) {
-            throw new RuntimeException("This reference number is already used");
+            throw new ConflictException("This reference number is already used");
         }
 
         FineCategory fineCategory = fineCategoryRepository
                 .findByCategoryCode(request.getCategoryCode())
-                .orElseThrow(() -> new RuntimeException("Invalid fine category code"));
+                .orElseThrow(() -> new BadRequestException("Invalid fine category code"));
 
         PoliceOfficer policeOfficer = policeOfficerRepository
                 .findByBadgeNumber(request.getOfficerBadgeNumber())
-                .orElseThrow(() -> new RuntimeException("Invalid officer badge number"));
+                .orElseThrow(() -> new BadRequestException("Invalid officer badge number"));
 
         Fine fine = new Fine();
         fine.setReferenceNumber(request.getReferenceNumber());

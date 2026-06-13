@@ -6,6 +6,9 @@ import com.ruhuna.traffic_fine_backend.Entity.PoliceOfficer;
 import com.ruhuna.traffic_fine_backend.dto.PayFineRequest;
 import com.ruhuna.traffic_fine_backend.dto.PayFineResponse;
 import com.ruhuna.traffic_fine_backend.dto.PaymentInitiateResponse;
+import com.ruhuna.traffic_fine_backend.exception.BadRequestException;
+import com.ruhuna.traffic_fine_backend.exception.ConflictException;
+import com.ruhuna.traffic_fine_backend.exception.ResourceNotFoundException;
 import com.ruhuna.traffic_fine_backend.repository.FineRepository;
 import com.ruhuna.traffic_fine_backend.repository.PaymentRepository;
 import com.ruhuna.traffic_fine_backend.sms.SmsService;
@@ -41,14 +44,14 @@ public class PaymentService {
     public PaymentInitiateResponse initiatePayment(PayFineRequest request) {
 
         Fine fine = fineRepository.findByReferenceNumber(request.getReferenceNumber())
-                .orElseThrow(() -> new RuntimeException("Fine not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Fine not found"));
 
         if ("PAID".equalsIgnoreCase(fine.getStatus())) {
-            throw new RuntimeException("This fine is already paid");
+            throw new ConflictException("This fine is already paid");
         }
 
         if (paymentRepository.existsByFineId(fine.getId())) {
-            throw new RuntimeException("Payment already initiated for this fine");
+            throw new ConflictException("Payment already initiated for this fine");
         }
 
         String paymentReference = generatePaymentReference();
@@ -99,11 +102,11 @@ public class PaymentService {
         );
 
         if (!valid) {
-            throw new RuntimeException("Invalid PayHere notification signature");
+            throw new BadRequestException("Invalid PayHere notification signature");
         }
 
         Payment payment = paymentRepository.findByPaymentReference(orderId)
-                .orElseThrow(() -> new RuntimeException("Payment not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
 
         Fine fine = payment.getFine();
 
