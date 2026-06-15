@@ -27,6 +27,7 @@ public class PaymentController {
 
     @PostMapping("/notify")
     public ResponseEntity<String> handlePayHereNotification(
+
             @RequestParam("merchant_id") String merchantId,
             @RequestParam("order_id") String orderId,
             @RequestParam("payment_id") String paymentId,
@@ -37,6 +38,11 @@ public class PaymentController {
             @RequestParam(value = "method", required = false) String method,
             @RequestParam(value = "status_message", required = false) String statusMessage
     ) {
+
+        System.out.println("=== PAYMENT NOTIFY CONTROLLER HIT ===");
+        System.out.println("orderId = " + orderId);
+        System.out.println("statusCode = " + statusCode);
+
         paymentService.handlePayHereNotification(
                 merchantId,
                 orderId,

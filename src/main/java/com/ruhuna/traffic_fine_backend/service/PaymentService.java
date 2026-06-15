@@ -70,6 +70,12 @@ public class PaymentService {
 
         Map<String, String> payHereParams =
                 payHerePaymentGatewayService.buildPaymentParams(fine, paymentReference);
+        System.out.println("=== PAYHERE URL DEBUG ===");
+        System.out.println("order_id = " + payHereParams.get("order_id"));
+        System.out.println("notify_url = " + payHereParams.get("notify_url"));
+        System.out.println("return_url = " + payHereParams.get("return_url"));
+        System.out.println("cancel_url = " + payHereParams.get("cancel_url"));
+        System.out.println("========================");
 
         return new PaymentInitiateResponse(
                 "Payment initiated",
@@ -91,6 +97,8 @@ public class PaymentService {
                                           String md5sig,
                                           String method,
                                           String statusMessage) {
+
+
 
         boolean valid = payHerePaymentGatewayService.verifyNotification(
                 merchantId,
