@@ -1,8 +1,9 @@
-
 import { useState } from "react";
 import apiClient from "../api/apiClient";
+import { useAuth } from "../context/AuthContext";
 
 function FineForm({ onFineCreated }) {
+  const { user, logout } = useAuth();
   const [formData, setFormData] = useState({
     referenceNumber: "",
     categoryCode: "",
@@ -33,10 +34,14 @@ function FineForm({ onFineCreated }) {
       const response = await apiClient.post("/fines/create", formData);
       onFineCreated(response.data);
     } catch (requestError) {
-      setError(
-        requestError.response?.data?.message ||
-          "Unable to verify the fine details."
-      );
+      if (requestError.response?.status === 401 || requestError.response?.status === 403) {
+        setError("Your session has expired or is invalid. Please sign out and log in again.");
+      } else {
+        setError(
+          requestError.response?.data?.message ||
+            "Unable to verify the fine details."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -64,6 +69,29 @@ function FineForm({ onFineCreated }) {
       border: "1px solid rgba(255, 255, 255, 0.35)",
     },
 
+    topHeader: {
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "center",
+      marginBottom: "18px",
+      flexWrap: "wrap",
+      gap: "10px",
+    },
+
+    signOutBtn: {
+      background: "none",
+      border: "none",
+      color: "#08796d",
+      fontWeight: "700",
+      cursor: "pointer",
+      fontSize: "13px",
+      padding: "6px 12px",
+      borderRadius: "8px",
+      backgroundColor: "#e8faf7",
+      fontFamily: "Inter, Arial, sans-serif",
+      transition: "background-color 0.2s",
+    },
+
     topBadge: {
       display: "inline-flex",
       alignItems: "center",
@@ -76,7 +104,6 @@ function FineForm({ onFineCreated }) {
       fontWeight: "700",
       letterSpacing: "0.8px",
       textTransform: "uppercase",
-      marginBottom: "18px",
     },
 
     heading: {
@@ -223,9 +250,22 @@ function FineForm({ onFineCreated }) {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <div style={styles.topBadge}>
-          <span>✓</span>
-          Secure Government Service
+        <div style={styles.topHeader}>
+          <div style={styles.topBadge}>
+            <span>✓</span>
+            Secure Government Service
+          </div>
+          {user && (
+            <button
+              type="button"
+              onClick={logout}
+              style={styles.signOutBtn}
+              onMouseEnter={e => e.currentTarget.style.backgroundColor = "#d2f5ee"}
+              onMouseLeave={e => e.currentTarget.style.backgroundColor = "#e8faf7"}
+            >
+              Sign Out ({user.username})
+            </button>
+          )}
         </div>
 
         <h1 style={styles.heading}>Pay Your Traffic Fine</h1>

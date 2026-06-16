@@ -6,6 +6,8 @@ import com.ruhuna.traffic_fine_backend.service.FineService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/fines")
 @CrossOrigin(origins = "*")
@@ -18,9 +20,19 @@ public class FineController {
     }
 
     @PostMapping("/create")
-    public ResponseEntity<CreateFineResponse> createFine(@RequestBody CreateFineRequest request) {
-        CreateFineResponse response = fineService.createFine(request);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> createFine(@RequestBody CreateFineRequest request) {
+        try {
+            CreateFineResponse response = fineService.createFine(request);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(400)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of("message", "Unable to verify the fine details. " + e.getMessage()));
+        }
     }
-
 }
+

@@ -36,6 +36,9 @@ function PaymentPage() {
   }
 
   function submitToPaymentGateway(checkoutUrl, paymentParameters) {
+    // Save fine details for the success page (PDF invoice)
+    localStorage.setItem("paid_fine", JSON.stringify(fine));
+
     const form = document.createElement("form");
     form.method = "POST";
     form.action = checkoutUrl;

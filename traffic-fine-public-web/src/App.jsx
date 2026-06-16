@@ -1,14 +1,14 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import PaymentPage from "./pages/PaymentPage";
 
-function PaymentSuccess() {
-  return (
-    <main>
-      <h1>Payment submitted</h1>
-      <p>Your payment result is being confirmed.</p>
-    </main>
-  );
-}
+// ── Your part: login & dashboard ──────────────────────────────────────────────
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
+import LoginPage from "./pages/LoginPage";
+import SignUpPage from "./pages/SignUpPage";
+import Dashboard from "./pages/Dashboard";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
+// ─────────────────────────────────────────────────────────────────────────────
 
 function PaymentCancel() {
   return (
@@ -21,13 +21,32 @@ function PaymentCancel() {
 
 function App() {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<PaymentPage />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/payment-cancel" element={<PaymentCancel />} />
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* ── Your routes (public) ── */}
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignUpPage />} />
+
+          {/* ── Friend's routes (public — no sign-in required) ── */}
+          <Route path="/payment" element={<PaymentPage />} />
+          <Route path="/payment-success" element={<PaymentSuccessPage />} />
+          <Route path="/payment/success" element={<PaymentSuccessPage />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
+          <Route path="/payment/cancel" element={<PaymentCancel />} />
+
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 
