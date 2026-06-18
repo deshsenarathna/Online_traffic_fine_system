@@ -1,14 +1,10 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 import PaymentPage from "./pages/PaymentPage";
-
-function PaymentSuccess() {
-  return (
-    <main>
-      <h1>Payment submitted</h1>
-      <p>Your payment result is being confirmed.</p>
-    </main>
-  );
-}
+import LoginPage from "./pages/LoginPage";
+import SignupPage from "./pages/SignupPage";
+import PaymentSuccessPage from "./pages/PaymentSuccessPage";
 
 function PaymentCancel() {
   return (
@@ -22,13 +18,25 @@ function PaymentCancel() {
 function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<PaymentPage />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
-        <Route path="/payment-cancel" element={<PaymentCancel />} />
-      </Routes>
+      <AuthProvider>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route
+            path="/payment"
+            element={
+              <ProtectedRoute>
+                <PaymentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/payment-success" element={<PaymentSuccessPage />} />
+          <Route path="/payment-cancel" element={<PaymentCancel />} />
+        </Routes>
+      </AuthProvider>
     </BrowserRouter>
   );
 }
 
-export default App;
+export default App;

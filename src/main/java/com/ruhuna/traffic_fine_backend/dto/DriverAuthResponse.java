@@ -1,0 +1,14 @@
+package com.ruhuna.traffic_fine_backend.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class DriverAuthResponse {
+    private String token;
+    private String fullName;
+    private String email;
+}

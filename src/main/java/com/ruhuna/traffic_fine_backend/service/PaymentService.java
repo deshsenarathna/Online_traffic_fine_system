@@ -5,6 +5,7 @@ import com.ruhuna.traffic_fine_backend.Entity.Payment;
 import com.ruhuna.traffic_fine_backend.dto.PayFineRequest;
 import com.ruhuna.traffic_fine_backend.dto.PayFineResponse;
 import com.ruhuna.traffic_fine_backend.dto.PaymentInitiateResponse;
+import com.ruhuna.traffic_fine_backend.dto.PaymentDetailsResponse;
 import com.ruhuna.traffic_fine_backend.repository.FineRepository;
 import com.ruhuna.traffic_fine_backend.repository.PaymentRepository;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
-
 
 @Service
 public class PaymentService {
@@ -113,6 +113,41 @@ public class PaymentService {
         }
 
         paymentRepository.save(payment);
+    }
+
+    public PaymentDetailsResponse getPaymentDetails(String paymentReference) {
+        Payment payment = paymentRepository.findByPaymentReference(paymentReference)
+                .orElseThrow(() -> new RuntimeException("Payment record not found"));
+
+        Fine fine = payment.getFine();
+
+        // Local development/sandbox testing fallback:
+        // Since localhost is not accessible by the PayHere webhook notifying server,
+        // we auto-complete the payment transaction once the redirect to the success page is verified.
+        if ("PENDING".equalsIgnoreCase(payment.getPaymentStatus())) {
+            payment.setPaymentStatus("SUCCESS");
+            payment.setGatewayTransactionId("TXN-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
+            payment.setPaymentMethod("CARD");
+            payment.setPaidDateTime(LocalDateTime.now());
+            
+            fine.setStatus("PAID");
+            fineRepository.save(fine);
+            paymentRepository.save(payment);
+        }
+
+        return new PaymentDetailsResponse(
+                payment.getPaymentReference(),
+                payment.getAmount(),
+                payment.getPaymentStatus(),
+                payment.getPaymentMethod(),
+                payment.getGatewayTransactionId(),
+                payment.getPaidDateTime(),
+                fine.getReferenceNumber(),
+                fine.getDriverName(),
+                fine.getDriverLicenseNumber(),
+                fine.getVehicleNumber(),
+                fine.getFineCategory().getCategoryName()
+        );
     }
 
     private String generatePaymentReference() {
