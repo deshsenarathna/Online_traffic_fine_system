@@ -29,6 +29,7 @@ public class SecurityConfig {
             .cors(AbstractHttpConfigurer::disable) // Or configure proper CORS rules if needed
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/admin/**").authenticated()
+                .requestMatchers("/api/driver-auth/**").permitAll()
                 .anyRequest().permitAll() // Allow everything else (fines, payments, auth login)
             )
             .sessionManagement(session -> session

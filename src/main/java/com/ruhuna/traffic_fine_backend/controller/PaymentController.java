@@ -51,4 +51,10 @@ public class PaymentController {
 
         return ResponseEntity.ok("Notification received");
     }
+
+    @GetMapping("/details/{paymentReference}")
+    public ResponseEntity<com.ruhuna.traffic_fine_backend.dto.PaymentDetailsResponse> getPaymentDetails(@PathVariable("paymentReference") String paymentReference) {
+        com.ruhuna.traffic_fine_backend.dto.PaymentDetailsResponse response = paymentService.getPaymentDetails(paymentReference);
+        return ResponseEntity.ok(response);
+    }
 }
