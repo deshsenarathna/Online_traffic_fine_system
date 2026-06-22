@@ -11,7 +11,7 @@ class TrafficFineApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'RideWave Fine Pay', // ඔයාගේ අනිත් App එකේ නම වගේම ගැළපෙන නමක්
+      title: 'RideWave Fine Pay', 
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,

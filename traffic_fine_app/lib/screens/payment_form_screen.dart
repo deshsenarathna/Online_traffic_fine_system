@@ -103,7 +103,7 @@ class _PaymentFormScreenState extends State<PaymentFormScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        // shape එක දෙන්න ඕනේ මෙන්න මෙතනටයි
+        
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
