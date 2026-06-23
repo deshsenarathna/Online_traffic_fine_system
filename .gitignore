@@ -31,3 +31,10 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Local secrets and configuration
+src/main/resources/application.properties
+.env
+
+# Vite cache
+**/.vite/

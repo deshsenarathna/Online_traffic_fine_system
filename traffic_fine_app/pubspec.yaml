@@ -1,5 +1,5 @@
 name: traffic_fine_app
-description: "A new Flutter project."
+description: "Sri Lanka Online Traffic Fine Payment System"
 publish_to: 'none'
 version: 1.0.0+1
 
@@ -12,6 +12,8 @@ dependencies:
   cupertino_icons: ^1.0.8
   http: ^1.2.0
   payhere_mobilesdk_flutter: ^3.0.1
+  flutter_secure_storage: ^9.2.2
+  shared_preferences: ^2.3.3
 
 dev_dependencies:
   flutter_test:
